@@ -2,8 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { FinanceProvider, useFinance } from "@/lib/finance/store";
 import { UploadZone } from "@/components/app/UploadZone";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _unused = UploadZone;
 import { Dashboard } from "@/components/app/Dashboard";
 
 export const Route = createFileRoute("/")({
