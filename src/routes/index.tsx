@@ -1,26 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Toaster } from "sonner";
+import { FinanceProvider, useFinance } from "@/lib/finance/store";
+import { UploadZone } from "@/components/app/UploadZone";
+import { Dashboard } from "@/components/app/Dashboard";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "CashPilot AI — Your AI Financial Coach (ZAR)" },
+      { name: "description", content: "Upload a South African bank CSV. CashPilot AI categorises spending in Rand, spots money leaks, forecasts next month, and coaches you on the next move." },
+      { property: "og:title", content: "CashPilot AI — Your AI Financial Coach" },
+      { property: "og:description", content: "AI financial coaching for South African spenders. Upload, analyze, get advice." },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
+function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <FinanceProvider>
+      <Toaster theme="dark" position="top-right" />
+      <Shell />
+    </FinanceProvider>
   );
 }
 
-function Index() {
-  return <PlaceholderIndex />;
+function Shell() {
+  const { analysis } = useFinance();
+  return analysis ? <Dashboard /> : <UploadZone />;
 }
