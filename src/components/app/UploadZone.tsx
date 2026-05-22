@@ -76,12 +76,12 @@ export function UploadZone() {
         <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-background ring-1 ring-border">
           {loading ? <FileText className="size-6 animate-pulse text-emerald-ai" /> : <Upload className="size-6 text-muted-foreground" />}
         </div>
-        <p className="text-base font-medium">{loading ? "Reading your statement..." : "Drop your CSV here or click to browse"}</p>
+        <p className="text-base font-medium">{loading ? "Reading your statement..." : "Drop your CSV or PDF here or click to browse"}</p>
         <p className="mt-1 text-xs text-muted-foreground">Processed locally in your browser. Nothing leaves until you ask the coach.</p>
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,text/csv,.pdf,application/pdf"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
