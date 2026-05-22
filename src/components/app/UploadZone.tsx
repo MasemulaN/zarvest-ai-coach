@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Upload, FileText, Sparkles } from "lucide-react";
 import { parseCSV, SAMPLE_CSV } from "@/lib/finance/csv";
+import { parsePDF } from "@/lib/finance/pdf";
 import { useFinance } from "@/lib/finance/store";
 import { toast } from "sonner";
 
@@ -12,22 +13,26 @@ export function UploadZone() {
 
   async function handleFile(file: File) {
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File too large (max 10MB)");
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("File too large (max 15MB)");
       return;
     }
+    const isPDF = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
     setLoading(true);
     try {
-      const text = await file.text();
-      const txns = parseCSV(text);
+      const txns = isPDF ? await parsePDF(file) : parseCSV(await file.text());
       if (txns.length === 0) {
-        toast.error("Couldn't read any transactions. Expecting columns like Date, Description, Amount.");
+        toast.error(
+          isPDF
+            ? "Couldn't extract transactions from this PDF. Try the CSV export from your bank."
+            : "Couldn't read any transactions. Expecting columns like Date, Description, Amount.",
+        );
         return;
       }
       toast.success(`Parsed ${txns.length} transactions`);
       loadTransactions(txns);
     } catch (e) {
-      toast.error("Could not parse the CSV file");
+      toast.error(isPDF ? "Could not read this PDF" : "Could not parse the CSV file");
     } finally {
       setLoading(false);
     }
@@ -50,7 +55,7 @@ export function UploadZone() {
         <span className="text-emerald-ai">Get a coach.</span>
       </h1>
       <p className="mt-4 max-w-lg text-pretty text-center text-muted-foreground">
-        Upload a CSV from FNB, ABSA, Nedbank, Capitec or Standard Bank. CashPilot categorises every transaction in ZAR,
+        Upload a CSV or PDF statement from FNB, ABSA, Nedbank, Capitec or Standard Bank. CashPilot categorises every transaction in ZAR,
         spots money leaks, and tells you what to do next.
       </p>
 
@@ -71,12 +76,12 @@ export function UploadZone() {
         <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-background ring-1 ring-border">
           {loading ? <FileText className="size-6 animate-pulse text-emerald-ai" /> : <Upload className="size-6 text-muted-foreground" />}
         </div>
-        <p className="text-base font-medium">{loading ? "Reading your statement..." : "Drop your CSV here or click to browse"}</p>
+        <p className="text-base font-medium">{loading ? "Reading your statement..." : "Drop your CSV or PDF here or click to browse"}</p>
         <p className="mt-1 text-xs text-muted-foreground">Processed locally in your browser. Nothing leaves until you ask the coach.</p>
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,text/csv,.pdf,application/pdf"
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
