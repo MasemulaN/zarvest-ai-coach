@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Upload, FileText, Sparkles } from "lucide-react";
 import { parseCSV, SAMPLE_CSV } from "@/lib/finance/csv";
+import { parsePDF } from "@/lib/finance/pdf";
 import { useFinance } from "@/lib/finance/store";
 import { toast } from "sonner";
 
@@ -12,22 +13,26 @@ export function UploadZone() {
 
   async function handleFile(file: File) {
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File too large (max 10MB)");
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("File too large (max 15MB)");
       return;
     }
+    const isPDF = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
     setLoading(true);
     try {
-      const text = await file.text();
-      const txns = parseCSV(text);
+      const txns = isPDF ? await parsePDF(file) : parseCSV(await file.text());
       if (txns.length === 0) {
-        toast.error("Couldn't read any transactions. Expecting columns like Date, Description, Amount.");
+        toast.error(
+          isPDF
+            ? "Couldn't extract transactions from this PDF. Try the CSV export from your bank."
+            : "Couldn't read any transactions. Expecting columns like Date, Description, Amount.",
+        );
         return;
       }
       toast.success(`Parsed ${txns.length} transactions`);
       loadTransactions(txns);
     } catch (e) {
-      toast.error("Could not parse the CSV file");
+      toast.error(isPDF ? "Could not read this PDF" : "Could not parse the CSV file");
     } finally {
       setLoading(false);
     }
