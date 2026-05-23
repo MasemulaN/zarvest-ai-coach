@@ -51,7 +51,7 @@ export function Dashboard() {
       <main className="md:ml-64">
         <div className="mx-auto max-w-7xl px-6 py-10 md:px-10">
           <header className="mb-10 animate-slide-up">
-            <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-emerald-ai">Analysis complete · {monthsCount} months</p>
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-emerald-ai">Analysis complete · {analysis.monthsCount} months</p>
             <h1 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
               {coach.headline || `Your average monthly spend is ${formatZAR(avgSpend)}.`}
             </h1>
