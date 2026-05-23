@@ -41,10 +41,22 @@ export interface AnalysisResult {
   totalSpend: number;
   totalIncome: number;
   net: number;
+  monthsCount: number;
+  avgMonthlyIncome: number;
+  avgMonthlySpend: number;
+  savingsRate: number; // 0-1, based on income vs spend (excludes self-transfers to savings as spend)
+  savingsContributed: number; // total transferred to savings
   byCategory: CategoryTotal[];
   monthly: MonthlyTrend[];
   recurring: { description: string; amount: number; count: number }[];
   leaks: MoneyLeak[];
   forecastNextMonth: number;
   topMerchants: { name: string; total: number }[];
+  hasRecurringSalary: boolean;
+}
+
+export interface Personality {
+  name: string;
+  description: string;
+  confidence: number; // 0-1
 }
