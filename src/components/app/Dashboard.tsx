@@ -17,14 +17,15 @@ export function Dashboard() {
   useEffect(() => {
     if (!analysis || coach.headline || coach.loading) return;
     setCoach({ headline: "", advice: [], loading: true });
-    const monthsCount = Math.max(analysis.monthly.length, 1);
     const snapshot = [
-      `Personality: ${personality?.name}`,
-      `Period: ${monthsCount} months, ${analysis.transactions.length} txns`,
-      `Avg monthly income: ${formatZAR(analysis.totalIncome / monthsCount)}`,
-      `Avg monthly spend: ${formatZAR(analysis.totalSpend / monthsCount)}`,
-      `Net: ${formatZAR(analysis.net)}`,
-      `Forecast next month: ${formatZAR(analysis.forecastNextMonth)}`,
+      `Personality: ${personality?.name} (confidence ${Math.round((personality?.confidence ?? 0) * 100)}%)`,
+      `Period: ${analysis.monthsCount} months, ${analysis.transactions.length} txns`,
+      `Recurring salary detected: ${analysis.hasRecurringSalary ? "yes" : "no"}`,
+      `Avg monthly income: ${formatZAR(analysis.avgMonthlyIncome)}`,
+      `Avg monthly spend: ${formatZAR(analysis.avgMonthlySpend)}`,
+      `Net total: ${formatZAR(analysis.net)}`,
+      `Savings rate: ${Math.round(analysis.savingsRate * 100)}% (transferred ${formatZAR(analysis.savingsContributed)} to savings)`,
+      `Forecast next month spend: ${formatZAR(analysis.forecastNextMonth)}`,
       `Top categories: ${analysis.byCategory.slice(0, 5).map((c) => `${c.category} ${formatZAR(c.total)} (${Math.round(c.pct * 100)}%)`).join("; ")}`,
       `Leaks: ${analysis.leaks.map((l) => `${l.label} ${formatZAR(-l.amount)}`).join("; ") || "none"}`,
     ].join("\n");
@@ -35,14 +36,14 @@ export function Dashboard() {
   }, [analysis]);
 
   if (!analysis || !personality) return null;
-  const monthsCount = Math.max(analysis.monthly.length, 1);
-  const avgSpend = analysis.totalSpend / monthsCount;
-  const avgIncome = analysis.totalIncome / monthsCount;
+  const avgSpend = analysis.avgMonthlySpend;
+  const avgIncome = analysis.avgMonthlyIncome;
   const lastMonth = analysis.monthly[analysis.monthly.length - 1];
   const prevAvg = analysis.monthly.length > 1
     ? analysis.monthly.slice(0, -1).reduce((a, b) => a + b.spend, 0) / (analysis.monthly.length - 1)
     : avgSpend;
   const trendPct = prevAvg > 0 ? ((lastMonth.spend - prevAvg) / prevAvg) * 100 : 0;
+
 
   return (
     <div className="min-h-screen bg-background">
