@@ -1,107 +1,195 @@
 import type { Transaction, Category } from "./types";
 
 const CATEGORY_RULES: Array<{ pattern: RegExp; category: Category }> = [
-  { pattern: /woolworths|pick.?n.?pay|checkers|spar|food.?lover|shoprite|fruit|butcher/i, category: "Food & Groceries" },
-  { pattern: /uber\s?eats|mr\s?d|takealot|food|kfc|nando|mcdonald|steers|debonairs|burger|sushi|cafe|restaurant|coffee|starbucks|vida/i, category: "Dining & Entertainment" },
-  { pattern: /uber|bolt|engen|shell|bp|sasol|caltex|total|fuel|petrol|gautrain|metrorail/i, category: "Transport & Fuel" },
-  { pattern: /netflix|showmax|spotify|apple\.?com|icloud|youtube|disney|amazon prime|dstv|playstation|xbox|chatgpt|openai|midjourney|notion|figma|adobe|microsoft|google one/i, category: "Subscriptions" },
-  { pattern: /vodacom|mtn|telkom|cell\s?c|rain|eskom|city of|municipal|water|electricity|wifi|fibre|afrihost|webafrica|insurance|discovery|momentum|sanlam|outsurance/i, category: "Bills & Utilities" },
-  { pattern: /takealot|amazon|mr price|h&m|zara|truworths|edgars|game|makro|incredible|loot|superbalist|game store/i, category: "Shopping" },
-  { pattern: /transfer to|savings|tymebank|easy equities|investec|allan gray|coronation|tfsa|crypto|luno|valr/i, category: "Savings & Transfers" },
-  { pattern: /salary|payroll|wages|deposit from|refund|interest earned|payment received|income/i, category: "Income" },
-  { pattern: /bank charge|service fee|monthly fee|atm fee|cash withdrawal fee|overdraft/i, category: "Bank Charges" },
+  // Income first — needs to win over generic patterns
+  { pattern: /\b(salary|salaris|payroll|wages|wage|stipend|nett?\s?pay|net\s?pay|employer|emp\s?sal|sal\s?credit|salary\s?credit|salary\s?ref|inc\s?sal)\b/i, category: "Income" },
+  { pattern: /\b(deposit from|payment received|payment from|refund|interest earned|interest credit|dividend|eft\s?credit|credit transfer received)\b/i, category: "Income" },
+  // Savings & transfers
+  { pattern: /\b(transfer to|tfr to|xfer to|savings|save|tymebank|easy equities|easyequities|investec|allan gray|coronation|tfsa|retirement|ra contribution|crypto|luno|valr|vault)\b/i, category: "Savings & Transfers" },
+  // Bank charges
+  { pattern: /\b(bank charge|service fee|monthly fee|admin fee|account fee|atm fee|cash withdrawal fee|overdraft|debit order fee|notification fee|sms fee|honour fee|dishonour fee)\b/i, category: "Bank Charges" },
+  // Subscriptions
+  { pattern: /\b(netflix|showmax|spotify|apple\.?com|apple music|icloud|youtube|disney|amazon prime|prime video|dstv|multichoice|playstation|xbox|chatgpt|openai|midjourney|notion|figma|adobe|microsoft 365|office 365|google one|linkedin premium|audible|kindle|patreon)\b/i, category: "Subscriptions" },
+  // Bills & utilities
+  { pattern: /\b(vodacom|mtn|telkom|cell\s?c|rain mobile|rain\b|eskom|prepaid electricity|city of (cape town|joburg|johannesburg|tshwane|ekurhuleni|durban)|municipal|water|electricity|rates|levy|wifi|fibre|fiber|afrihost|webafrica|cool ideas|vumatel|openserve|insurance|discovery|momentum|sanlam|outsurance|liberty|miway|king price|naked insurance|hollard|old mutual)\b/i, category: "Bills & Utilities" },
+  // Shopping
+  { pattern: /\b(takealot|amazon|mr\s?price|h&m|zara|truworths|edgars|game\b|makro|incredible connection|hifi corp|loot|superbalist|sportscene|totalsports|bash|woolworths online|builders warehouse|leroy merlin)\b/i, category: "Shopping" },
+  // Transport & Fuel
+  { pattern: /\b(uber(?!\s?eats)|bolt(?!\s?food)|engen|shell|bp\b|sasol|caltex|total energies|total\s|fuel|petrol|garage|gautrain|metrorail|prasa|parking|e-?toll|sanral|toll gate)\b/i, category: "Transport & Fuel" },
+  // Dining
+  { pattern: /\b(uber\s?eats|mr\s?d|mr delivery|bolt\s?food|kfc|nando|mcdonald|steers|debonairs|burger|sushi|cafe|restaurant|coffee|starbucks|vida|seattle coffee|wimpy|spur|ocean basket|col'?cacchio|romans pizza|fishaways|chicken licken)\b/i, category: "Dining & Entertainment" },
+  // Groceries (after dining to avoid woolworths-cafe collision)
+  { pattern: /\b(woolworths|pick.?n.?pay|pnp\b|checkers|spar\b|food\s?lover|shoprite|usave|boxer|fruit\s?&?\s?veg|butcher|liquor|tops\b)\b/i, category: "Food & Groceries" },
 ];
 
+const INCOME_HINT = /\b(salary|salaris|payroll|wage|wages|nett?\s?pay|net\s?pay|employer|stipend|sal\s?credit|salary\s?credit|deposit from|payment received|payment from|refund|interest earned|interest credit|dividend|eft\s?credit|credit transfer)\b/i;
+
 export function categorize(description: string, amount: number): Category {
-  if (amount > 0 && /salary|payroll|wages|deposit|refund|interest|received/i.test(description)) return "Income";
+  if (amount > 0 && INCOME_HINT.test(description)) return "Income";
   for (const rule of CATEGORY_RULES) {
     if (rule.pattern.test(description)) return rule.category;
   }
+  // Fallback: positive amounts that look like reversals/credits but unmatched
+  if (amount > 0) return "Income";
   return "Other";
 }
 
 function parseAmount(raw: string): number {
   if (raw == null) return NaN;
-  let s = String(raw).trim().replace(/"/g, "");
+  let s = String(raw).trim().replace(/^"|"$/g, "");
   if (!s) return NaN;
+  const isCr = /\b(cr)\b/i.test(s);
+  const isDr = /\b(dr)\b/i.test(s);
   const negParen = /^\(.*\)$/.test(s);
+  const trailingNeg = /-\s*$/.test(s);
   s = s.replace(/[()]/g, "");
-  s = s.replace(/R|ZAR|\s/gi, "");
-  // Handle "1,234.56" or "1 234,56"
-  if (/,\d{2}$/.test(s) && !/\.\d/.test(s)) s = s.replace(/\./g, "").replace(",", ".");
+  s = s.replace(/\b(cr|dr)\b/gi, "");
+  s = s.replace(/[Rr]\s|ZAR|\s/g, "");
+  // Decimal sep detection
+  if (/,\d{1,2}$/.test(s) && !/\.\d/.test(s)) s = s.replace(/\./g, "").replace(",", ".");
   else s = s.replace(/,/g, "");
   const n = parseFloat(s);
   if (Number.isNaN(n)) return NaN;
-  return negParen ? -Math.abs(n) : n;
+  let v = n;
+  if (negParen || trailingNeg || isDr) v = -Math.abs(n);
+  else if (isCr) v = Math.abs(n);
+  return v;
 }
 
 function parseDate(raw: string): string | null {
   if (!raw) return null;
-  const s = raw.trim().replace(/"/g, "");
-  // try ISO
-  const iso = Date.parse(s);
-  if (!Number.isNaN(iso)) return new Date(iso).toISOString().slice(0, 10);
-  // dd/mm/yyyy or dd-mm-yyyy
-  const m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  const s = raw.trim().replace(/^"|"$/g, "");
+  if (!s) return null;
+  // ISO yyyy-mm-dd
+  let m = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  // dd Mon yyyy
+  const MONTHS: Record<string, string> = { jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06", jul: "07", aug: "08", sep: "09", sept: "09", oct: "10", nov: "11", dec: "12" };
+  m = s.match(/^(\d{1,2})[\s\-\/.]+([A-Za-z]{3,4})[\s\-\/.]+(\d{2,4})$/);
   if (m) {
-    let [_, d, mo, y] = m;
-    if (y.length === 2) y = "20" + y;
-    const date = new Date(`${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`);
-    if (!Number.isNaN(date.getTime())) return date.toISOString().slice(0, 10);
+    const mo = MONTHS[m[2].toLowerCase().slice(0, 3)];
+    if (mo) {
+      const y = m[3].length === 2 ? "20" + m[3] : m[3];
+      return `${y}-${mo}-${m[1].padStart(2, "0")}`;
+    }
   }
+  // dd/mm/yyyy or dd-mm-yy
+  m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) {
+    const [_, d, mo, y] = m;
+    const yy = y.length === 2 ? "20" + y : y;
+    return `${yy}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  // Fallback: Date.parse
+  const t = Date.parse(s);
+  if (!Number.isNaN(t)) return new Date(t).toISOString().slice(0, 10);
   return null;
 }
 
-function splitCSVLine(line: string): string[] {
+function detectDelimiter(sample: string): string {
+  const candidates = [",", ";", "\t", "|"];
+  let best = ",";
+  let bestScore = -1;
+  for (const d of candidates) {
+    const lines = sample.split(/\r?\n/).slice(0, 20).filter((l) => l.trim());
+    if (lines.length < 2) continue;
+    const counts = lines.map((l) => splitLine(l, d).length);
+    const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
+    const variance = counts.reduce((a, b) => a + (b - avg) ** 2, 0) / counts.length;
+    const score = avg - variance; // prefer many consistent columns
+    if (avg >= 2 && score > bestScore) {
+      bestScore = score;
+      best = d;
+    }
+  }
+  return best;
+}
+
+function splitLine(line: string, delim: string): string[] {
   const result: string[] = [];
   let cur = "";
   let inQ = false;
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
-    if (c === '"') { inQ = !inQ; continue; }
-    if (c === "," && !inQ) { result.push(cur); cur = ""; continue; }
+    if (c === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; continue; }
+      inQ = !inQ;
+      continue;
+    }
+    if (c === delim && !inQ) { result.push(cur); cur = ""; continue; }
     cur += c;
   }
   result.push(cur);
-  return result;
+  return result.map((s) => s.trim());
+}
+
+function stripBOM(s: string): string {
+  return s.replace(/^\uFEFF/, "");
 }
 
 export function parseCSV(text: string): Transaction[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
+  text = stripBOM(text);
+  const allLines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (allLines.length === 0) return [];
 
-  // Find header row
-  let headerIdx = 0;
-  for (let i = 0; i < Math.min(lines.length, 10); i++) {
-    if (/date/i.test(lines[i]) && /(amount|debit|credit|value)/i.test(lines[i])) {
+  const delim = detectDelimiter(text);
+
+  // Find header row by scanning first 25 rows for date + amount-ish header
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(allLines.length, 25); i++) {
+    const lower = allLines[i].toLowerCase();
+    if (/date|datum|transaction date|posting date|trans date/.test(lower) &&
+        /(amount|bedrag|debit|credit|value|money in|money out|withdrawal|deposit)/.test(lower)) {
       headerIdx = i;
       break;
     }
   }
-  const headers = splitCSVLine(lines[headerIdx]).map((h) => h.trim().toLowerCase());
-  const dateIdx = headers.findIndex((h) => /date/.test(h));
-  const descIdx = headers.findIndex((h) => /desc|narrative|details|reference|memo/.test(h));
-  const amtIdx = headers.findIndex((h) => /^amount$|value/.test(h));
-  const debitIdx = headers.findIndex((h) => /debit|out|withdraw/.test(h));
-  const creditIdx = headers.findIndex((h) => /credit|in|deposit/.test(h));
+  // If no header detected, attempt heuristic: first row whose columns look textual
+  if (headerIdx < 0) headerIdx = 0;
+
+  const headers = splitLine(allLines[headerIdx], delim).map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+  const findIdx = (re: RegExp) => headers.findIndex((h) => re.test(h));
+
+  const dateIdx = findIdx(/^(date|datum|transaction date|posting date|trans date|value date|effective date)$/) >= 0
+    ? findIdx(/^(date|datum|transaction date|posting date|trans date|value date|effective date)$/)
+    : findIdx(/date|datum/);
+  const descIdx = findIdx(/^(description|desc|narrative|details|reference|memo|particulars|transaction|narration|payee)/);
+  const amtIdx = findIdx(/^(amount|bedrag|value|trans amount|transaction amount)$/);
+  const debitIdx = findIdx(/debit|out|withdraw|money out|debet/);
+  const creditIdx = findIdx(/credit|in\b|deposit|money in|kredit/);
+  const typeIdx = findIdx(/^(type|dr\/cr|d\/c|sign)$/);
 
   const txns: Transaction[] = [];
-  for (let i = headerIdx + 1; i < lines.length; i++) {
-    const cols = splitCSVLine(lines[i]);
+  for (let i = headerIdx + 1; i < allLines.length; i++) {
+    const cols = splitLine(allLines[i], delim);
+    if (cols.length < 2) continue;
     const date = parseDate(cols[dateIdx >= 0 ? dateIdx : 0]);
     if (!date) continue;
     const description = (cols[descIdx >= 0 ? descIdx : 1] || "").trim();
-    if (!description) continue;
+    if (!description || /^(opening|closing|balance|total|brought forward|carried forward)/i.test(description)) continue;
+
     let amount = NaN;
-    if (amtIdx >= 0) amount = parseAmount(cols[amtIdx]);
-    else if (debitIdx >= 0 || creditIdx >= 0) {
+    if (amtIdx >= 0) {
+      amount = parseAmount(cols[amtIdx]);
+      if (typeIdx >= 0 && !Number.isNaN(amount)) {
+        const t = (cols[typeIdx] || "").toLowerCase();
+        if (/^(d|dr|debit|out)/.test(t)) amount = -Math.abs(amount);
+        else if (/^(c|cr|credit|in)/.test(t)) amount = Math.abs(amount);
+      }
+    } else if (debitIdx >= 0 || creditIdx >= 0) {
       const d = debitIdx >= 0 ? parseAmount(cols[debitIdx]) : 0;
       const c = creditIdx >= 0 ? parseAmount(cols[creditIdx]) : 0;
-      const dn = Number.isNaN(d) ? 0 : d;
-      const cn = Number.isNaN(c) ? 0 : c;
-      amount = cn - Math.abs(dn);
+      const dn = Number.isNaN(d) ? 0 : Math.abs(d);
+      const cn = Number.isNaN(c) ? 0 : Math.abs(c);
+      amount = cn - dn;
+    } else {
+      // Try last numeric column as amount
+      for (let k = cols.length - 1; k >= 0; k--) {
+        const v = parseAmount(cols[k]);
+        if (!Number.isNaN(v) && v !== 0) { amount = v; break; }
+      }
     }
-    if (Number.isNaN(amount) || amount === 0) continue;
+    if (!Number.isFinite(amount) || amount === 0) continue;
     txns.push({ date, description, amount, category: categorize(description, amount) });
   }
   return txns.sort((a, b) => a.date.localeCompare(b.date));

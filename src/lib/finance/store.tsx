@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { analyze, determinePersonality } from "@/lib/finance/analyze";
-import type { AnalysisResult, Transaction } from "@/lib/finance/types";
+import type { AnalysisResult, Personality, Transaction } from "@/lib/finance/types";
 
 type View = "upload" | "analyzing" | "dashboard";
 
@@ -15,7 +15,7 @@ interface FinanceCtx {
   setView: (v: View) => void;
   transactions: Transaction[];
   analysis: AnalysisResult | null;
-  personality: { name: string; description: string } | null;
+  personality: Personality | null;
   coach: AICoachState;
   setCoach: (s: AICoachState) => void;
   loadTransactions: (txns: Transaction[]) => void;
