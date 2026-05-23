@@ -11,6 +11,19 @@ export function UploadZone() {
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  async function readAsText(file: File): Promise<string> {
+    // Try UTF-8 first, fall back to windows-1252 (common for SA bank CSV exports)
+    const buf = await file.arrayBuffer();
+    try {
+      const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(buf);
+      // Heuristic: if it contains replacement char clusters, try latin1
+      if (/\uFFFD{2,}/.test(utf8)) throw new Error("bad utf8");
+      return utf8;
+    } catch {
+      return new TextDecoder("windows-1252").decode(buf);
+    }
+  }
+
   async function handleFile(file: File) {
     if (!file) return;
     if (file.size > 15 * 1024 * 1024) {
@@ -18,25 +31,32 @@ export function UploadZone() {
       return;
     }
     const isPDF = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
+    const isCSV = /\.(csv|txt|tsv)$/i.test(file.name) || /csv|excel|text/.test(file.type);
+    if (!isPDF && !isCSV) {
+      toast.error("Unsupported file type. Upload a CSV, TSV or PDF bank statement.");
+      return;
+    }
     setLoading(true);
     try {
-      const txns = isPDF ? await parsePDF(file) : parseCSV(await file.text());
+      const txns = isPDF ? await parsePDF(file) : parseCSV(await readAsText(file));
       if (txns.length === 0) {
         toast.error(
           isPDF
-            ? "Couldn't extract transactions from this PDF. Try the CSV export from your bank."
-            : "Couldn't read any transactions. Expecting columns like Date, Description, Amount.",
+            ? "Couldn't extract transactions. Try a text-based PDF (not a scan) or your bank's CSV export."
+            : "Couldn't read any transactions. Make sure the file has Date, Description and Amount columns.",
         );
         return;
       }
-      toast.success(`Parsed ${txns.length} transactions`);
+      toast.success(`Parsed ${txns.length} transactions across ${new Set(txns.map((t) => t.date.slice(0, 7))).size} month(s)`);
       loadTransactions(txns);
     } catch (e) {
-      toast.error(isPDF ? "Could not read this PDF" : "Could not parse the CSV file");
+      console.error("Upload parse error", e);
+      toast.error(isPDF ? "Could not read this PDF. If it's a scanned image, export the CSV instead." : "Could not parse this CSV. Try a different export format.");
     } finally {
       setLoading(false);
     }
   }
+
 
   function trySample() {
     const txns = parseCSV(SAMPLE_CSV);

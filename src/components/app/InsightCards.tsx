@@ -2,15 +2,24 @@ import { AlertTriangle, Droplet } from "lucide-react";
 import type { AnalysisResult } from "@/lib/finance/types";
 import { formatZAR } from "@/lib/finance/analyze";
 
-export function PersonalityCard({ name, description }: { name: string; description: string }) {
+export function PersonalityCard({ name, description, confidence }: { name: string; description: string; confidence?: number }) {
+  const pct = typeof confidence === "number" ? Math.round(confidence * 100) : null;
   return (
     <div className="rounded-3xl border border-emerald-ai/20 bg-gradient-to-br from-emerald-ai/15 via-emerald-ai/5 to-transparent p-6">
-      <p className="mb-3 text-[10px] font-mono uppercase tracking-widest text-emerald-ai">AI Personality verdict</p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-ai">AI Personality verdict</p>
+        {pct !== null && (
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {pct}% confidence
+          </span>
+        )}
+      </div>
       <h3 className="text-2xl font-bold tracking-tight">{name}</h3>
       <p className="mt-3 text-sm leading-relaxed text-foreground/70">{description}</p>
     </div>
   );
 }
+
 
 export function MoneyLeaksCard({ analysis }: { analysis: AnalysisResult }) {
   const leaks = analysis.leaks;

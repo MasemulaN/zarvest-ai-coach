@@ -75,7 +75,7 @@ export function Dashboard() {
               <ForecastSimulator analysis={analysis} />
             </div>
             <div className="space-y-6 lg:col-span-4">
-              <PersonalityCard name={personality.name} description={personality.description} />
+              <PersonalityCard name={personality.name} description={personality.description} confidence={personality.confidence} />
               <AdviceCard headline={coach.headline} advice={coach.advice} loading={coach.loading} />
               <MoneyLeaksCard analysis={analysis} />
               <ChatPanel />
