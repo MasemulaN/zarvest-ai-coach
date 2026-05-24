@@ -7,6 +7,14 @@ Built using Loveable through prompt engineering and AI-assisted development.
 
 ---
 
+# 🔗 Live Demo
+
+The live demo of the application can be accessed here
+
+https://zarvest-ai-coach.lovable.app
+
+---
+
 ## 🚀 Features
 
 - Upload CSV or PDF bank statements
