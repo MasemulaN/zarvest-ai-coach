@@ -1,6 +1,7 @@
 import { Compass, LayoutDashboard, LineChart, MessageSquare, Moon, Sun, Upload } from "lucide-react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useFinance } from "@/lib/finance/store";
+import zarvestIcon from "@/assets/zarvest-icon.jpg";
 
 export function Sidebar() {
   const { analysis, theme, toggleTheme, reset } = useFinance();
