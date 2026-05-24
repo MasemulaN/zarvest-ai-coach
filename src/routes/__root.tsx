@@ -11,6 +11,7 @@ import { Toaster } from "sonner";
 import { FinanceProvider } from "@/lib/finance/store";
 
 import appCss from "../styles.css?url";
+import zarvestIcon from "@/assets/zarvest-icon.jpg?url";
 
 function NotFoundComponent() {
   return (
@@ -84,6 +85,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap",
       },
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/jpeg", href: zarvestIcon },
+      { rel: "apple-touch-icon", href: zarvestIcon },
     ],
   }),
   shellComponent: RootShell,

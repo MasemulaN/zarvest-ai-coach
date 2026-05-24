@@ -6,7 +6,7 @@ import { useFinance } from "@/lib/finance/store";
 export const Route = createFileRoute("/chat-coach")({
   head: () => ({
     meta: [
-      { title: "Chat Coach — CashPilot AI" },
+      { title: "Chat Coach — Zarvest" },
       { name: "description", content: "Ask your AI financial coach anything about your money." },
     ],
   }),

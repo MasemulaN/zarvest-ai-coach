@@ -75,7 +75,7 @@ export function UploadZone() {
         <span className="text-emerald-ai">Get a coach.</span>
       </h1>
       <p className="mt-4 max-w-lg text-pretty text-center text-muted-foreground">
-        Upload a CSV or PDF statement from FNB, ABSA, Nedbank, Capitec or Standard Bank. CashPilot categorises every transaction in ZAR,
+        Upload a CSV or PDF statement from FNB, ABSA, Nedbank, Capitec or Standard Bank. Zarvest categorises every transaction in ZAR,
         spots money leaks, and tells you what to do next.
       </p>
 
