@@ -1,14 +1,19 @@
 import { Compass, LayoutDashboard, LineChart, MessageSquare, Moon, Sun, Upload } from "lucide-react";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useFinance } from "@/lib/finance/store";
 
 export function Sidebar() {
   const { analysis, theme, toggleTheme, reset } = useFinance();
+  const router = useRouter();
+  const path = router.state.location.pathname;
+
   const items = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: LineChart, label: "Forecasting" },
-    { icon: MessageSquare, label: "Chat Coach" },
-    { icon: Compass, label: "Insights" },
+    { icon: LayoutDashboard, label: "Dashboard", to: "/" as const },
+    { icon: LineChart, label: "Forecasting", to: "/forecasting" as const },
+    { icon: MessageSquare, label: "Chat Coach", to: "/chat-coach" as const },
+    { icon: Compass, label: "Insights", to: "/insights" as const },
   ];
+
   return (
     <aside className="fixed left-0 top-0 z-30 hidden h-full w-64 flex-col border-r border-border bg-background p-6 md:flex">
       <div className="mb-12 flex items-center gap-3">
@@ -18,19 +23,23 @@ export function Sidebar() {
         </span>
       </div>
       <nav className="flex-1 space-y-1">
-        {items.map((it) => (
-          <button
-            key={it.label}
-            className={`group flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors ${
-              it.active
-                ? "bg-emerald-ai/10 font-medium text-emerald-ai"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-            }`}
-          >
-            <it.icon className="size-4" />
-            {it.label}
-          </button>
-        ))}
+        {items.map((it) => {
+          const active = it.to === "/" ? path === "/" : path.startsWith(it.to);
+          return (
+            <Link
+              key={it.label}
+              to={it.to}
+              className={`group flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors ${
+                active
+                  ? "bg-emerald-ai/10 font-medium text-emerald-ai"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <it.icon className="size-4" />
+              {it.label}
+            </Link>
+          );
+        })}
       </nav>
 
       {analysis && (

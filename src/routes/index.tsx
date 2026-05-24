@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Toaster } from "sonner";
-import { FinanceProvider, useFinance } from "@/lib/finance/store";
+import { useFinance } from "@/lib/finance/store";
 import { UploadZone } from "@/components/app/UploadZone";
 import { Dashboard } from "@/components/app/Dashboard";
 
@@ -17,15 +16,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return (
-    <FinanceProvider>
-      <Toaster theme="dark" position="top-right" />
-      <Shell />
-    </FinanceProvider>
-  );
-}
-
-function Shell() {
   const { analysis } = useFinance();
   return analysis ? <Dashboard /> : <UploadZone />;
 }

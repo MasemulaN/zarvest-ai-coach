@@ -7,6 +7,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { Toaster } from "sonner";
+import { FinanceProvider } from "@/lib/finance/store";
 
 import appCss from "../styles.css?url";
 
@@ -109,7 +111,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <FinanceProvider>
+        <Toaster theme="dark" position="top-right" />
+        <Outlet />
+      </FinanceProvider>
     </QueryClientProvider>
   );
 }
