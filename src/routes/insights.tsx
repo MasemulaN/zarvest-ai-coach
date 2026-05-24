@@ -7,7 +7,7 @@ import { formatZAR } from "@/lib/finance/analyze";
 export const Route = createFileRoute("/insights")({
   head: () => ({
     meta: [
-      { title: "Insights — CashPilot AI" },
+      { title: "Insights — Zarvest" },
       { name: "description", content: "AI-powered personality verdict, money leaks, and personalised advice." },
     ],
   }),

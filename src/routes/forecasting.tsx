@@ -7,7 +7,7 @@ import { formatZAR } from "@/lib/finance/analyze";
 export const Route = createFileRoute("/forecasting")({
   head: () => ({
     meta: [
-      { title: "Forecasting — CashPilot AI" },
+      { title: "Forecasting — Zarvest" },
       { name: "description", content: "Simulate spending changes and see your projected savings." },
     ],
   }),

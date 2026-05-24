@@ -29,7 +29,7 @@ async function callLovableAI(messages: Array<{ role: string; content: string }>)
   return json.choices?.[0]?.message?.content ?? "";
 }
 
-const COACH_SYSTEM = `You are CashPilot AI, a sharp, calm financial coach for South African users.
+const COACH_SYSTEM = `You are Zarvest, a sharp, calm financial coach for South African users.
 Rules:
 - All amounts in South African Rand, formatted as "R 1,234".
 - Be direct and advisor-like. Maximum 3 short sentences per reply unless a list is asked for.
