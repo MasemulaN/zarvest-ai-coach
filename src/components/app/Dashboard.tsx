@@ -1,12 +1,8 @@
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useFinance } from "@/lib/finance/store";
-import { Sidebar } from "@/components/app/Sidebar";
-import { UploadZone } from "@/components/app/UploadZone";
+import { DashboardShell } from "@/components/app/DashboardShell";
 import { SpendingChart, TrendChart } from "@/components/app/Charts";
-import { PersonalityCard, MoneyLeaksCard, AdviceCard } from "@/components/app/InsightCards";
-import { ForecastSimulator } from "@/components/app/ForecastSimulator";
-import { ChatPanel } from "@/components/app/ChatPanel";
 import { formatZAR } from "@/lib/finance/analyze";
 import { generateInsights } from "@/lib/finance/coach.functions";
 
@@ -44,46 +40,56 @@ export function Dashboard() {
     : avgSpend;
   const trendPct = prevAvg > 0 ? ((lastMonth.spend - prevAvg) / prevAvg) * 100 : 0;
 
-
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="md:ml-64">
-        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10">
-          <header className="mb-10 animate-slide-up">
-            <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-emerald-ai">Analysis complete · {analysis.monthsCount} months</p>
-            <h1 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
-              {coach.headline || `Your average monthly spend is ${formatZAR(avgSpend)}.`}
-            </h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
-              {personality.name} — {personality.description}
-            </p>
-          </header>
+    <DashboardShell>
+      <header className="mb-10 animate-slide-up">
+        <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-emerald-ai">Analysis complete · {analysis.monthsCount} months</p>
+        <h1 className="text-balance text-3xl font-bold tracking-tight md:text-4xl">
+          {coach.headline || `Your average monthly spend is ${formatZAR(avgSpend)}.`}
+        </h1>
+        <p className="mt-2 max-w-2xl text-muted-foreground">
+          {personality.name} — {personality.description}
+        </p>
+      </header>
 
-          {/* Top stats */}
-          <div className="mb-8 grid gap-4 md:grid-cols-3">
-            <StatCard label="Avg monthly income" value={formatZAR(avgIncome)} accent />
-            <StatCard label="Avg monthly spend" value={formatZAR(avgSpend)} sub={`${trendPct >= 0 ? "+" : ""}${Math.round(trendPct)}% vs prior avg`} subTone={trendPct > 0 ? "warn" : "good"} />
-            <StatCard label="Next month forecast" value={formatZAR(analysis.forecastNextMonth)} highlight />
-          </div>
+      <div className="mb-8 grid gap-4 md:grid-cols-3">
+        <StatCard label="Avg monthly income" value={formatZAR(avgIncome)} accent />
+        <StatCard label="Avg monthly spend" value={formatZAR(avgSpend)} sub={`${trendPct >= 1 ? "+" : ""}${Math.round(trendPct)}% vs prior avg`} subTone={trendPct > 0 ? "warn" : "good"} />
+        <StatCard label="Next month forecast" value={formatZAR(analysis.forecastNextMonth)} highlight />
+      </div>
 
-          {/* Grid */}
-          <div className="grid gap-6 lg:grid-cols-12">
-            <div className="space-y-6 lg:col-span-8">
-              <SpendingChart analysis={analysis} />
-              <TrendChart analysis={analysis} />
-              <ForecastSimulator analysis={analysis} />
-            </div>
-            <div className="space-y-6 lg:col-span-4">
-              <PersonalityCard name={personality.name} description={personality.description} confidence={personality.confidence} />
-              <AdviceCard headline={coach.headline} advice={coach.advice} loading={coach.loading} />
-              <MoneyLeaksCard analysis={analysis} />
-              <ChatPanel />
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-8">
+          <SpendingChart analysis={analysis} />
+          <TrendChart analysis={analysis} />
+        </div>
+        <div className="space-y-6 lg:col-span-4">
+          <div className="rounded-3xl border border-border bg-surface p-6">
+            <p className="mb-3 text-[10px] font-mono uppercase tracking-widest text-emerald-ai">Quick summary</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Savings rate</span>
+                <span className="font-mono font-bold">{Math.round(analysis.savingsRate * 100)}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Recurring salary</span>
+                <span className="font-mono font-bold">{analysis.hasRecurringSalary ? "Yes" : "No"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Transactions</span>
+                <span className="font-mono font-bold">{analysis.transactions.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Net total</span>
+                <span className={`font-mono font-bold ${analysis.net >= 0 ? "text-emerald-ai" : "text-destructive"}`}>
+                  {formatZAR(analysis.net)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardShell>
   );
 }
 
