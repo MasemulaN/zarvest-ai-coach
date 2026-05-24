@@ -64,11 +64,11 @@ export function Sidebar() {
         </button>
         {analysis && (
           <button
-            onClick={reset}
+            onClick={() => { reset(); router.navigate({ to: "/" }); }}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-secondary"
           >
             <Upload className="size-3.5" />
-            New CSV
+            New Statement
           </button>
         )}
       </div>
