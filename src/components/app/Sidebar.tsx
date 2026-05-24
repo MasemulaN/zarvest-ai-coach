@@ -18,9 +18,9 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 z-30 hidden h-full w-64 flex-col border-r border-border bg-background p-6 md:flex">
       <div className="mb-12 flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-ai font-bold italic text-background">CP</div>
+        <img src={zarvestIcon} alt="Zarvest" width={36} height={36} className="size-9 rounded-xl object-cover" />
         <span className="text-lg font-bold tracking-tight">
-          CashPilot <span className="text-emerald-ai">AI</span>
+          Zarvest
         </span>
       </div>
       <nav className="flex-1 space-y-1">
